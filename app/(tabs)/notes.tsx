@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useAppStore } from '@/stores/appStore';
 import { ConversationItem } from '@/components/ConversationItem';
@@ -54,24 +53,12 @@ export default function NotesScreen() {
 
   return (
     <View style={[styles.container, isDark && styles.containerDark]}>
-      <LinearGradient
-        colors={isDark 
-          ? ['rgba(244, 63, 94, 0.08)', 'transparent'] 
-          : ['rgba(244, 63, 94, 0.12)', 'transparent']
-        }
-        style={styles.gradientTop}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      />
       
       <SafeAreaView style={styles.safeArea}>
         {/* Header */}
         <View style={[styles.header, isDark && styles.headerDark]}>
           <View style={styles.headerTop}>
             <View style={styles.headerLeft}>
-              <View style={[styles.appIcon, { backgroundColor: accentColor }]}>
-                <Ionicons name="document-text" size={26} color="white" />
-              </View>
               <View style={styles.headerTextContainer}>
                 <Text style={[styles.headerTitle, isDark && styles.textDark]}>
                   {notesData.title}
@@ -246,14 +233,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  gradientTop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 300,
-    opacity: 0.5,
-  },
   header: {
     paddingHorizontal: 20,
     paddingTop: 16,
@@ -271,14 +250,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-  },
-  appIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
   },
   headerTextContainer: {
     flex: 1,

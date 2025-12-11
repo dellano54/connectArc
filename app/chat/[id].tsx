@@ -13,7 +13,6 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useAppStore } from '@/stores/appStore';
 import { Avatar } from '@/components/ui/Avatar';
@@ -103,15 +102,6 @@ export default function ChatDetailScreen() {
 
   return (
     <View style={[styles.container, isDark && styles.containerDark]}>
-      <LinearGradient
-        colors={isDark 
-          ? [`${accentColor}15`, 'transparent'] 
-          : [`${accentColor}18`, 'transparent']
-        }
-        style={styles.gradientBg}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      />
       
       <SafeAreaView style={styles.safeArea}>
         {/* Header */}
@@ -186,13 +176,6 @@ export default function ChatDetailScreen() {
           </View>
         </BlurView>
 
-        {/* Watermark */}
-        <View style={styles.watermarkContainer} pointerEvents="none">
-          <Text style={[styles.watermark, { color: accentColor }]}>
-            {tabData?.watermark || 'MSG'}
-          </Text>
-        </View>
-
         {/* Messages */}
         <FlatList
           data={[...messages].reverse()}
@@ -258,14 +241,6 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-  },
-  gradientBg: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 400,
-    opacity: 0.4,
   },
   header: {
     borderBottomWidth: 1,
@@ -333,20 +308,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  watermarkContainer: {
-    position: 'absolute',
-    top: '35%',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    opacity: 0.05,
-    zIndex: 0,
-  },
-  watermark: {
-    fontSize: 160,
-    fontWeight: '900',
-    letterSpacing: -8,
   },
   messagesList: {
     padding: 20,

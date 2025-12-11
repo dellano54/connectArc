@@ -9,7 +9,6 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useAppStore } from '@/stores/appStore';
 import { ConversationItem } from '@/components/ConversationItem';
@@ -36,25 +35,12 @@ export default function ChatScreen() {
 
   return (
     <View style={[styles.container, isDark && styles.containerDark]}>
-      {/* Gradient Background */}
-      <LinearGradient
-        colors={isDark 
-          ? ['rgba(59, 130, 246, 0.08)', 'transparent'] 
-          : ['rgba(59, 130, 246, 0.12)', 'transparent']
-        }
-        style={styles.gradientTop}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      />
       
       <SafeAreaView style={styles.safeArea}>
         {/* Modern Header */}
         <View style={[styles.header, isDark && styles.headerDark]}>
           <View style={styles.headerTop}>
             <View style={styles.headerLeft}>
-              <View style={[styles.appIcon, { backgroundColor: accentColor }]}>
-                <Text style={styles.appIconText}>C</Text>
-              </View>
               <View style={styles.headerTextContainer}>
                 <Text style={[styles.headerTitle, isDark && styles.textDark]}>
                   {chatData.title}
@@ -141,14 +127,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  gradientTop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 300,
-    opacity: 0.5,
-  },
   header: {
     paddingHorizontal: 20,
     paddingTop: 16,
@@ -167,24 +145,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-  },
-  appIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  appIconText: {
-    color: 'white',
-    fontSize: 22,
-    fontWeight: '800',
   },
   headerTextContainer: {
     flex: 1,

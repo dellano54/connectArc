@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useAppStore } from '@/stores/appStore';
 import { ConversationItem } from '@/components/ConversationItem';
 import { Avatar } from '@/components/ui/Avatar';
@@ -34,20 +33,9 @@ export default function GroupsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, isDark && styles.containerDark]}>
-      <LinearGradient
-        colors={['rgba(124, 58, 237, 0.15)', 'transparent']}
-        style={[styles.blob, { top: -100, left: -50 }]}
-      />
-      <LinearGradient
-        colors={['rgba(37, 99, 235, 0.15)', 'transparent']}
-        style={[styles.blob, { bottom: -100, right: -50 }]}
-      />
 
       <View style={[styles.header, isDark && styles.headerDark]}>
         <View style={styles.headerContent}>
-          <View style={[styles.logoContainer, { backgroundColor: accentColor }]}>
-            <Text style={styles.logo}>CA</Text>
-          </View>
           <View style={styles.headerTextContainer}>
             <Text style={[styles.headerTitle, { color: accentColor }]}>
               {groupsData.title}
@@ -111,12 +99,6 @@ const styles = StyleSheet.create({
   containerDark: {
     backgroundColor: Colors.dark.bg,
   },
-  blob: {
-    position: 'absolute',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -135,19 +117,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-  },
-  logoContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  logo: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '800',
   },
   headerTextContainer: {
     flex: 1,

@@ -6,170 +6,131 @@ import {
   FlatList,
   SafeAreaView,
   TouchableOpacity,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppStore } from '@/stores/appStore';
 import { ConversationItem } from '@/components/ConversationItem';
+import { Colors, TabColors } from '@/constants/Colors';
 import { Avatar } from '@/components/ui/Avatar';
-import { ProfileModal } from '@/components/modals/ProfileModal';
-import { Colors } from '@/constants/Colors';
 
 export default function GroupsScreen() {
-  const {
-    isDark,
-    contentData,
-    currentUser,
-    setCurrentTab,
-    toggleTheme,
-    setProfileModalVisible,
-  } = useAppStore();
+  const { isDark, contentData, setCurrentTab } = useAppStore();
+  const theme = isDark ? Colors.dark : Colors.light;
 
-  useEffect(() => {
-    setCurrentTab('groups');
-  }, []);
+  useEffect(() => { setCurrentTab('groups'); }, []);
 
-  const groupsData = contentData.groups;
-  const accentColor = Colors.violet.default;
+  const renderPinnedTeam = ({ item }: { item: any }) => (
+    <TouchableOpacity style={[styles.pinnedCard, { backgroundColor: theme.card }]}>
+      <Avatar source={item.avatar} size={48} style={{ borderRadius: 16, marginBottom: 12 }} />
+      <Text style={[styles.pinnedName, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
+      <Text style={[styles.pinnedMembers, { color: theme.sub }]}>24 members</Text>
+    </TouchableOpacity>
+  );
 
   return (
-    <SafeAreaView style={[styles.container, isDark && styles.containerDark]}>
-
-      <View style={[styles.header, isDark && styles.headerDark]}>
-        <View style={styles.headerContent}>
-          <View style={styles.headerTextContainer}>
-            <Text style={[styles.headerTitle, { color: accentColor }]}>
-              {groupsData.title}
-            </Text>
-            <Text style={[styles.headerSubtitle, isDark && styles.subtextDark]}>
-              {groupsData.items.length} groups
-            </Text>
-          </View>
+    <View style={[styles.container, { backgroundColor: theme.bg }]}>
+      <View style={[styles.blob, { backgroundColor: TabColors.groups, opacity: isDark ? 0.15 : 0.08 }]} />
+      
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: theme.text }]}>Teams</Text>
+          <TouchableOpacity style={[styles.addBtn, { backgroundColor: TabColors.groups }]}>
+            <Ionicons name="add" size={24} color="white" />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.themeBtn} onPress={toggleTheme}>
-          <Ionicons
-            name={isDark ? 'moon' : 'sunny'}
-            size={20}
-            color={isDark ? Colors.dark.sub : Colors.light.sub}
-          />
-        </TouchableOpacity>
-      </View>
 
-      <FlatList
-        data={groupsData.items}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ConversationItem
-            item={item}
-            accentColor={accentColor}
-            tabType="groups"
-          />
-        )}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
-
-      <TouchableOpacity
-        style={[styles.footer, isDark && styles.footerDark]}
-        onPress={() => setProfileModalVisible(true)}
-      >
-        <Avatar source={currentUser.avatar} size={40} />
-        <View style={styles.userInfo}>
-          <Text style={[styles.userName, isDark && styles.textDark]}>
-            {currentUser.name}
-          </Text>
-          <Text style={[styles.userRole, isDark && styles.subtextDark]}>
-            {currentUser.role}
-          </Text>
-        </View>
-        <Ionicons
-          name="settings-outline"
-          size={20}
-          color={isDark ? Colors.dark.sub : Colors.light.sub}
+        <FlatList
+          data={contentData.groups.items}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={
+            <View style={styles.pinnedSection}>
+              <Text style={[styles.sectionTitle, { color: theme.sub }]}>PINNED</Text>
+              <FlatList
+                horizontal
+                data={contentData.groups.items.slice(0, 3)} // Mock pinned
+                renderItem={renderPinnedTeam}
+                keyExtractor={(item) => `pinned-${item.id}`}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 20 }}
+              />
+              <Text style={[styles.sectionTitle, { color: theme.sub, paddingHorizontal: 24 }]}>ALL TEAMS</Text>
+            </View>
+          }
+          renderItem={({ item }) => (
+            <ConversationItem 
+              item={item} 
+              tabType="groups" 
+              accentColor={TabColors.groups} 
+            />
+          )}
+          contentContainerStyle={styles.list}
         />
-      </TouchableOpacity>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.bg,
-  },
-  containerDark: {
-    backgroundColor: Colors.dark.bg,
+  container: { flex: 1 },
+  safeArea: { flex: 1 },
+  blob: {
+    position: 'absolute',
+    top: -50,
+    right: -100,
+    width: 400,
+    height: 400,
+    borderRadius: 200,
   },
   header: {
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'android' ? 50 : 20,
+    paddingBottom: 20,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
-    backgroundColor: 'rgba(255,255,255,0.8)',
-  },
-  headerDark: {
-    borderBottomColor: Colors.dark.border,
-    backgroundColor: 'rgba(10,10,10,0.8)',
-  },
-  headerContent: {
-    flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
   },
-  headerTextContainer: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: Colors.light.sub,
-    marginTop: 2,
-  },
-  subtextDark: {
-    color: Colors.dark.sub,
-  },
-  textDark: {
-    color: Colors.dark.text,
-  },
-  themeBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  title: { fontSize: 40, fontWeight: '800', letterSpacing: -1 },
+  addBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  listContent: {
-    padding: 16,
+  pinnedSection: {
+    marginBottom: 10,
   },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
-    backgroundColor: 'rgba(255,255,255,0.8)',
-  },
-  footerDark: {
-    borderTopColor: Colors.dark.border,
-    backgroundColor: 'rgba(10,10,10,0.8)',
-  },
-  userInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  userName: {
-    fontSize: 14,
+  sectionTitle: {
+    fontSize: 12,
     fontWeight: '700',
-    color: Colors.light.text,
+    letterSpacing: 1.5,
+    marginBottom: 16,
+    paddingHorizontal: 24,
   },
-  userRole: {
-    fontSize: 10,
-    color: Colors.light.sub,
-    marginTop: 2,
+  pinnedCard: {
+    width: 140,
+    padding: 16,
+    marginRight: 12,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 4,
   },
+  pinnedName: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  pinnedMembers: {
+    fontSize: 12,
+  },
+  list: { paddingBottom: 100 },
 });

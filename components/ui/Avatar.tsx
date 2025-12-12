@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Image, StyleSheet, ViewStyle } from 'react-native';
 import { Colors } from '@/constants/Colors';
+import { useAppStore } from '@/stores/appStore';
 
 interface AvatarProps {
   source: string;
@@ -17,11 +18,13 @@ export const Avatar: React.FC<AvatarProps> = ({
   size = 48,
   style,
   showStatus = false,
-  statusColor = Colors.green.default,
+  statusColor = Colors.success,
   isNote = false,
   noteIcon,
 }) => {
+  const isDark = useAppStore((state) => state.isDark);
   const borderRadius = size * 0.28; // Slightly more rounded
+  const borderColor = isDark ? Colors.dark.bg : Colors.light.bg;
 
   return (
     <View style={[{ width: size, height: size }, style]}>
@@ -62,6 +65,7 @@ export const Avatar: React.FC<AvatarProps> = ({
               borderRadius: size * 0.14,
               backgroundColor: statusColor,
               borderWidth: size > 48 ? 3 : 2.5,
+              borderColor: borderColor,
             },
           ]}
         />

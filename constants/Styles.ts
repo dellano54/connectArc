@@ -27,14 +27,14 @@ export const GlobalStyles = StyleSheet.create({
   
   // Color Glows (for active states)
   glowBlue: {
-    shadowColor: Colors.blue.default,
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.4,
     shadowRadius: 15,
     elevation: 8,
   },
   glowViolet: {
-    shadowColor: Colors.violet.default,
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.4,
     shadowRadius: 15,

@@ -9,26 +9,26 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { BlurView } from 'expo-blur';
 import { useAppStore } from '@/stores/appStore';
 import { Avatar } from '@/components/ui/Avatar';
-import { Colors, TabColors } from '@/constants/Colors';
+import { Colors } from '@/constants/Colors';
 import { Message } from '@/types';
 
 export default function ChatDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { isDark, messages, addMessage, contentData, currentTab, currentUser } = useAppStore();
+  const theme = isDark ? Colors.dark : Colors.light;
   
   const [inputText, setInputText] = useState('');
   
   const tabData = contentData[currentTab];
   const conversation = tabData?.items.find((item) => item.id === id);
-  const accentColor = TabColors[currentTab] || Colors.blue.default;
 
   const handleSend = () => {
     if (!inputText.trim()) return;
@@ -56,125 +56,99 @@ export default function ChatDetailScreen() {
     
     return (
       <View style={[styles.messageWrapper, isMe && styles.messageWrapperMe]}>
-        <View style={styles.messageHeader}>
-          <Text style={[styles.messageSender, isDark && styles.textDark]}>
-            {item.senderName}
-          </Text>
-          <Text style={[styles.messageTime, isDark && styles.subtextDark]}>
-            {item.time}
-          </Text>
-        </View>
-        <View
-          style={[
-            styles.messageBubble,
-            isMe ? [styles.messageBubbleMe, { backgroundColor: accentColor }] : styles.messageBubbleOther,
-            isDark && !isMe && styles.messageBubbleOtherDark,
-          ]}
-        >
-          {item.type === 'file' ? (
-            <View style={styles.fileContainer}>
-              <View style={[styles.fileIcon, isMe && styles.fileIconMe]}>
-                <Ionicons 
-                  name="document-attach" 
-                  size={22} 
-                  color={isMe ? 'white' : accentColor} 
-                />
-              </View>
-              <Text style={[styles.fileText, isMe && styles.messageTextMe]}>
-                {item.text}
-              </Text>
-            </View>
-          ) : (
-            <Text style={[styles.messageText, isMe && styles.messageTextMe]}>
-              {item.text}
-            </Text>
-          )}
-        </View>
-        {isMe && item.read && (
-          <View style={styles.readContainer}>
-            <Ionicons name="checkmark-done" size={14} color={accentColor} />
-            <Text style={[styles.readText, { color: accentColor }]}>Read</Text>
+        {!isMe && (
+          <View style={styles.avatarCol}>
+             <Avatar source={conversation?.avatar || ''} size={32} />
           </View>
         )}
+        <View style={{ flex: 1, alignItems: isMe ? 'flex-end' : 'flex-start' }}>
+          <View style={styles.messageHeader}>
+            <Text style={[styles.messageSender, { color: theme.sub }]}>
+              {item.senderName} • {item.time}
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.messageBubble,
+              isMe 
+                ? { backgroundColor: Colors.primary, borderBottomRightRadius: 4 } 
+                : { backgroundColor: theme.card, borderTopLeftRadius: 4 },
+              !isMe && styles.shadow, // Add shadow to received messages
+            ]}
+          >
+            {item.type === 'file' ? (
+              <View style={styles.fileContainer}>
+                <View style={[styles.fileIcon, isMe && styles.fileIconMe]}>
+                  <Ionicons 
+                    name="document" 
+                    size={24} 
+                    color={isMe ? 'white' : Colors.primary} 
+                  />
+                </View>
+                <Text style={[styles.fileText, { color: isMe ? 'white' : theme.text }]}>
+                  {item.text}
+                </Text>
+              </View>
+            ) : (
+              <Text style={[styles.messageText, { color: isMe ? 'white' : theme.text }]}>
+                {item.text}
+              </Text>
+            )}
+          </View>
+          {isMe && item.read && (
+            <View style={styles.readContainer}>
+              <Ionicons name="checkmark-done" size={14} color={Colors.primary} />
+            </View>
+          )}
+        </View>
       </View>
     );
   };
 
   return (
-    <View style={[styles.container, isDark && styles.containerDark]}>
-      
+    <View style={[styles.container, { backgroundColor: theme.bg }]}>
+      {/* Burned-in Watermark */}
+      <View style={styles.watermarkContainer} pointerEvents="none">
+        <Text style={[styles.watermarkText, { color: isDark ? '#1A1A1A' : '#EAEAEA' }]}>CA</Text>
+      </View>
+
       <SafeAreaView style={styles.safeArea}>
-        {/* Header */}
-        <BlurView
-          intensity={isDark ? 60 : 80}
-          tint={isDark ? 'dark' : 'light'}
-          style={[styles.header, isDark && styles.headerDark]}
-        >
-          <View style={styles.headerContent}>
-            <TouchableOpacity
-              style={styles.backBtn}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.back();
-              }}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="chevron-back"
-                size={26}
-                color={isDark ? Colors.dark.text : Colors.light.text}
-              />
-            </TouchableOpacity>
-            
-            <View style={styles.headerCenter}>
-              {currentTab === 'notes' ? (
-                <Avatar
-                  source=""
-                  size={40}
-                  isNote
-                  noteIcon={<Ionicons name="document-text" size={20} color={Colors.rose.default} />}
-                />
-              ) : (
-                <Avatar
-                  source={conversation?.avatar || ''}
-                  size={40}
-                  showStatus
-                  statusColor={Colors.green.default}
-                />
-              )}
-              <View style={styles.headerInfo}>
-                <Text style={[styles.headerName, isDark && styles.textDark]} numberOfLines={1}>
-                  {conversation?.name || 'Chat'}
-                </Text>
-                {currentTab !== 'notes' && (
-                  <View style={styles.statusRow}>
-                    <View style={[styles.statusDot, { backgroundColor: Colors.green.default }]} />
-                    <Text style={[styles.statusText, isDark && styles.subtextDark]}>
-                      Active now
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-            
-            <View style={styles.headerActions}>
-              <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7}>
-                <Ionicons
-                  name="call"
-                  size={22}
-                  color={isDark ? Colors.dark.sub : Colors.light.sub}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7}>
-                <Ionicons
-                  name="ellipsis-horizontal"
-                  size={22}
-                  color={isDark ? Colors.dark.sub : Colors.light.sub}
-                />
-              </TouchableOpacity>
-            </View>
+        {/* Professional Header */}
+        <View style={[styles.header, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.back();
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="arrow-back"
+              size={28}
+              color={theme.text}
+            />
+          </TouchableOpacity>
+          
+          <View style={styles.headerInfo}>
+             <Text style={[styles.headerName, { color: theme.text }]} numberOfLines={1}>
+                {conversation?.name || 'Chat'}
+             </Text>
+             <View style={styles.statusRow}>
+                <View style={[styles.statusDot, { backgroundColor: Colors.success }]} />
+                <Text style={[styles.statusText, { color: theme.sub }]}>Active</Text>
+             </View>
           </View>
-        </BlurView>
+          
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7}>
+              <Ionicons name="call-outline" size={28} color={theme.text} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7}>
+              <Ionicons name="videocam-outline" size={28} color={theme.text} />
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* Messages */}
         <FlatList
@@ -186,29 +160,26 @@ export default function ChatDetailScreen() {
           inverted
         />
 
-        {/* Input */}
+        {/* Input Area */}
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 110 : 30}
+          style={{ width: '100%' }}
         >
-          <BlurView
-            intensity={isDark ? 80 : 95}
-            tint={isDark ? 'dark' : 'light'}
-            style={[styles.inputContainer, isDark && styles.inputContainerDark]}
-          >
+          <View style={[styles.inputContainer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
             <TouchableOpacity style={styles.attachBtn} activeOpacity={0.7}>
               <Ionicons
-                name="add-circle"
+                name="add"
                 size={32}
-                color={accentColor}
+                color={Colors.primary}
               />
             </TouchableOpacity>
             
-            <View style={[styles.inputWrapper, isDark && styles.inputWrapperDark]}>
+            <View style={[styles.inputWrapper, { backgroundColor: theme.input }]}>
               <TextInput
-                style={[styles.input, isDark && styles.inputDark]}
-                placeholder="Message..."
-                placeholderTextColor={isDark ? Colors.dark.sub : Colors.light.sub}
+                style={[styles.input, { color: theme.text }]}
+                placeholder="Type a message..."
+                placeholderTextColor={theme.sub}
                 value={inputText}
                 onChangeText={setInputText}
                 multiline
@@ -217,14 +188,21 @@ export default function ChatDetailScreen() {
             </View>
             
             <TouchableOpacity
-              style={[styles.sendBtn, { backgroundColor: accentColor }]}
+              style={[
+                styles.sendBtn, 
+                { backgroundColor: inputText.trim() ? Colors.primary : theme.input }
+              ]}
               onPress={handleSend}
               disabled={!inputText.trim()}
               activeOpacity={0.8}
             >
-              <Ionicons name="arrow-up" size={24} color="white" />
+              <Ionicons 
+                name="send" 
+                size={22} 
+                color={inputText.trim() ? 'white' : theme.sub} 
+              />
             </TouchableOpacity>
-          </BlurView>
+          </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
@@ -234,53 +212,46 @@ export default function ChatDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.bg,
   },
-  containerDark: {
-    backgroundColor: Colors.dark.bg,
+  watermarkContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: -1,
+  },
+  watermarkText: {
+    fontSize: 200,
+    fontWeight: '900',
+    opacity: 0.4,
+    transform: [{ rotate: '-20deg' }],
   },
   safeArea: {
     flex: 1,
   },
   header: {
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.06)',
-  },
-  headerDark: {
-    borderBottomColor: 'rgba(255,255,255,0.08)',
-  },
-  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 10 : 10,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 3,
+    zIndex: 10,
   },
   backBtn: {
-    marginRight: 8,
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerCenter: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginRight: 16,
   },
   headerInfo: {
-    marginLeft: 12,
     flex: 1,
   },
   headerName: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '700',
-    color: Colors.light.text,
-  },
-  textDark: {
-    color: Colors.dark.text,
-  },
-  subtextDark: {
-    color: Colors.dark.sub,
+    letterSpacing: -0.3,
   },
   statusRow: {
     flexDirection: 'row',
@@ -289,78 +260,62 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: Colors.light.sub,
+    fontWeight: '500',
   },
   headerActions: {
     flexDirection: 'row',
-    gap: 4,
+    gap: 16,
   },
   iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 4,
   },
   messagesList: {
     padding: 20,
     paddingBottom: 24,
   },
   messageWrapper: {
-    marginBottom: 20,
-    maxWidth: '80%',
+    marginBottom: 24,
+    flexDirection: 'row',
+    width: '100%',
+    gap: 12,
   },
   messageWrapperMe: {
-    alignSelf: 'flex-end',
-    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+  },
+  avatarCol: {
+    justifyContent: 'flex-end',
+    marginBottom: 4,
   },
   messageHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 6,
-    paddingHorizontal: 4,
-    gap: 8,
+    paddingHorizontal: 2,
   },
   messageSender: {
     fontSize: 11,
-    fontWeight: '700',
-    color: Colors.light.sub,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  messageTime: {
-    fontSize: 11,
-    color: Colors.light.sub,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   messageBubble: {
     padding: 16,
     borderRadius: 20,
-    maxWidth: '100%',
+    maxWidth: '85%',
   },
-  messageBubbleOther: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    borderTopLeftRadius: 6,
-  },
-  messageBubbleOtherDark: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  messageBubbleMe: {
-    borderTopRightRadius: 6,
+  shadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   messageText: {
     fontSize: 16,
     lineHeight: 22,
-    color: Colors.light.text,
-  },
-  messageTextMe: {
-    color: 'white',
   },
   fileContainer: {
     flexDirection: 'row',
@@ -371,7 +326,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.06)',
+    backgroundColor: 'rgba(0,0,0,0.05)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -379,55 +334,39 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
   },
   fileText: {
-    fontSize: 14,
-    color: Colors.light.text,
+    fontSize: 15,
+    fontWeight: '500',
     flex: 1,
   },
   readContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
     marginTop: 4,
-    paddingHorizontal: 4,
-    gap: 4,
-  },
-  readText: {
-    fontSize: 11,
-    fontWeight: '700',
   },
   inputContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    paddingBottom: Platform.OS === 'ios' ? 12 : 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 24, // Significant padding for soft keys
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.06)',
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 10,
-  },
-  inputContainerDark: {
-    borderTopColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    gap: 12,
   },
   attachBtn: {
-    paddingBottom: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   inputWrapper: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.04)',
-    borderRadius: 22,
-    paddingHorizontal: 16,
+    borderRadius: 24,
+    paddingHorizontal: 20,
     paddingVertical: 10,
-    maxHeight: 100,
-  },
-  inputWrapperDark: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    minHeight: 48,
+    justifyContent: 'center',
   },
   input: {
     fontSize: 16,
-    color: Colors.light.text,
-    maxHeight: 80,
-  },
-  inputDark: {
-    color: Colors.dark.text,
+    maxHeight: 100,
   },
   sendBtn: {
     width: 44,
@@ -435,10 +374,5 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
 });

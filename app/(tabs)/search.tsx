@@ -6,21 +6,18 @@ import {
   SafeAreaView,
   TouchableOpacity,
   TextInput,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { useAppStore } from '@/stores/appStore';
-import { Avatar } from '@/components/ui/Avatar';
-import { ProfileModal } from '@/components/modals/ProfileModal';
 import { Colors } from '@/constants/Colors';
 
 export default function SearchScreen() {
   const {
     isDark,
-    contentData,
-    currentUser,
     setCurrentTab,
     toggleTheme,
-    setProfileModalVisible,
   } = useAppStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,216 +26,166 @@ export default function SearchScreen() {
     setCurrentTab('search');
   }, []);
 
-  const searchData = contentData.search;
-  const accentColor = Colors.amber.default;
+  const accentColor = Colors.primary;
 
   return (
-    <SafeAreaView style={[styles.container, isDark && styles.containerDark]}>
+    <View style={styles.container}>
+      
+      <SafeAreaView style={styles.safeArea}>
+        {/* Header */}
+        <BlurView 
+          intensity={isDark ? 80 : 90} 
+          tint={isDark ? 'dark' : 'light'} 
+          style={[styles.headerBlur, { paddingTop: Platform.OS === 'android' ? 40 : 0 }]}
+        >
+          <View style={styles.header}>
+            <View style={styles.headerTop}>
+              <View>
+                <Text style={[styles.headerTitle, isDark && styles.textDark]}>
+                  Search
+                </Text>
+                <Text style={[styles.headerSubtitle, isDark && styles.subtextDark]}>
+                  Find messages, files, and people
+                </Text>
+              </View>
+              
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={toggleTheme}
+              >
+                <Ionicons
+                  name={isDark ? 'moon' : 'sunny'}
+                  size={20}
+                  color={isDark ? Colors.dark.sub : Colors.light.sub}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </BlurView>
 
-      <View style={[styles.header, isDark && styles.headerDark]}>
-        <View style={styles.headerContent}>
-          <View style={styles.headerTextContainer}>
-            <Text style={[styles.headerTitle, { color: accentColor }]}>
-              {searchData.title}
-            </Text>
-            <Text style={[styles.headerSubtitle, isDark && styles.subtextDark]}>
-              Search the network
+        {/* Content */}
+        <View style={styles.content}>
+          <View style={[styles.searchContainer, isDark && styles.searchContainerDark]}>
+            <Ionicons
+              name="search"
+              size={20}
+              color={isDark ? Colors.dark.sub : Colors.light.sub}
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={[styles.searchInput, isDark && styles.searchInputDark]}
+              placeholder="Search..."
+              placeholderTextColor={isDark ? Colors.dark.sub : Colors.light.sub}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearBtn}>
+                <Ionicons
+                  name="close-circle"
+                  size={20}
+                  color={isDark ? Colors.dark.sub : Colors.light.sub}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, isDark && styles.subtextDark]}>RECENT</Text>
+            <Text style={[styles.emptyText, isDark && styles.textDark]}>
+              No recent searches.
             </Text>
           </View>
-        </View>
-        <TouchableOpacity style={styles.themeBtn} onPress={toggleTheme}>
-          <Ionicons
-            name={isDark ? 'moon' : 'sunny'}
-            size={20}
-            color={isDark ? Colors.dark.sub : Colors.light.sub}
-          />
-        </TouchableOpacity>
-      </View>
 
-      <View style={styles.content}>
-        <View style={[styles.searchContainer, isDark && styles.searchContainerDark]}>
-          <Ionicons
-            name="search"
-            size={20}
-            color={isDark ? Colors.dark.sub : Colors.light.sub}
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={[styles.searchInput, isDark && styles.searchInputDark]}
-            placeholder="Search ConnectArc Network..."
-            placeholderTextColor={isDark ? Colors.dark.sub : Colors.light.sub}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity
-              onPress={() => setSearchQuery('')}
-              style={styles.clearBtn}
-            >
-              <Ionicons
-                name="close-circle"
-                size={20}
-                color={isDark ? Colors.dark.sub : Colors.light.sub}
-              />
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, isDark && styles.subtextDark]}>SUGGESTED</Text>
+            <TouchableOpacity style={[styles.suggestionItem, isDark && styles.suggestionItemDark]}>
+              <Ionicons name="document-text" size={18} color={accentColor} style={styles.suggestionIcon} />
+              <Text style={[styles.suggestionText, isDark && styles.textDark]}>Project Specs</Text>
             </TouchableOpacity>
-          )}
+             <TouchableOpacity style={[styles.suggestionItem, isDark && styles.suggestionItemDark]}>
+              <Ionicons name="images" size={18} color={accentColor} style={styles.suggestionIcon} />
+              <Text style={[styles.suggestionText, isDark && styles.textDark]}>Design Assets</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-
-        <View style={styles.recentSection}>
-          <Text style={[styles.sectionTitle, isDark && styles.textDark]}>
-            RECENT
-          </Text>
-          <Text style={[styles.emptyText, isDark && styles.subtextDark]}>
-            No recent searches in ConnectArc
-          </Text>
-        </View>
-
-        <View style={styles.suggestionSection}>
-          <Text style={[styles.sectionTitle, isDark && styles.textDark]}>
-            SUGGESTIONS
-          </Text>
-          <TouchableOpacity
-            style={[styles.suggestionItem, isDark && styles.suggestionItemDark]}
-          >
-            <Ionicons
-              name="trending-up"
-              size={20}
-              color={accentColor}
-              style={styles.suggestionIcon}
-            />
-            <Text style={[styles.suggestionText, isDark && styles.textDark]}>
-              Trending topics
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.suggestionItem, isDark && styles.suggestionItemDark]}
-          >
-            <Ionicons
-              name="people"
-              size={20}
-              color={accentColor}
-              style={styles.suggestionIcon}
-            />
-            <Text style={[styles.suggestionText, isDark && styles.textDark]}>
-              Find people
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.suggestionItem, isDark && styles.suggestionItemDark]}
-          >
-            <Ionicons
-              name="documents"
-              size={20}
-              color={accentColor}
-              style={styles.suggestionIcon}
-            />
-            <Text style={[styles.suggestionText, isDark && styles.textDark]}>
-              Browse files
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <TouchableOpacity
-        style={[styles.footer, isDark && styles.footerDark]}
-        onPress={() => setProfileModalVisible(true)}
-      >
-        <Avatar source={currentUser.avatar} size={40} />
-        <View style={styles.userInfo}>
-          <Text style={[styles.userName, isDark && styles.textDark]}>
-            {currentUser.name}
-          </Text>
-          <Text style={[styles.userRole, isDark && styles.subtextDark]}>
-            {currentUser.role}
-          </Text>
-        </View>
-        <Ionicons
-          name="settings-outline"
-          size={20}
-          color={isDark ? Colors.dark.sub : Colors.light.sub}
-        />
-      </TouchableOpacity>
-
-      <ProfileModal />
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.bg,
+    backgroundColor: 'transparent',
   },
-  containerDark: {
-    backgroundColor: Colors.dark.bg,
+  safeArea: {
+    flex: 1,
+  },
+  headerBlur: {
+    borderBottomWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
-    backgroundColor: 'rgba(255,255,255,0.8)',
+    paddingBottom: 16,
   },
-  headerDark: {
-    borderBottomColor: Colors.dark.border,
-    backgroundColor: 'rgba(10,10,10,0.8)',
-  },
-  headerContent: {
+  headerTop: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    flex: 1,
-  },
-  headerTextContainer: {
-    flex: 1,
+    paddingTop: 16,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 28,
+    fontWeight: '800',
+    color: Colors.light.text,
+    letterSpacing: -0.5,
   },
   headerSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     color: Colors.light.sub,
     marginTop: 2,
-  },
-  subtextDark: {
-    color: Colors.dark.sub,
   },
   textDark: {
     color: Colors.dark.text,
   },
-  themeBtn: {
+  subtextDark: {
+    color: Colors.dark.sub,
+  },
+  iconButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.05)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   content: {
     flex: 1,
-    padding: 16,
+    padding: 20,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.light.bg,
+    backgroundColor: '#F3F4F6',
     borderRadius: 16,
     paddingHorizontal: 16,
-    marginBottom: 24,
+    height: 52,
+    marginBottom: 32,
   },
   searchContainerDark: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   searchIcon: {
     marginRight: 12,
   },
   searchInput: {
     flex: 1,
-    paddingVertical: 16,
-    fontSize: 14,
+    fontSize: 16,
     color: Colors.light.text,
+    height: '100%',
   },
   searchInputDark: {
     color: Colors.dark.text,
@@ -246,14 +193,11 @@ const styles = StyleSheet.create({
   clearBtn: {
     padding: 4,
   },
-  recentSection: {
-    marginBottom: 32,
-  },
-  suggestionSection: {
+  section: {
     marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     color: Colors.light.sub,
     letterSpacing: 1,
@@ -282,31 +226,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: Colors.light.text,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.border,
-    backgroundColor: 'rgba(255,255,255,0.8)',
-  },
-  footerDark: {
-    borderTopColor: Colors.dark.border,
-    backgroundColor: 'rgba(10,10,10,0.8)',
-  },
-  userInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  userName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.light.text,
-  },
-  userRole: {
-    fontSize: 10,
-    color: Colors.light.sub,
-    marginTop: 2,
   },
 });

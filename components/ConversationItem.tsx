@@ -4,131 +4,152 @@ import {
   View,
   Text,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
+import { BlurView } from 'expo-blur';
 import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
 import { ConversationItem as ConversationItemType } from '@/types';
 import { Colors } from '@/constants/Colors';
 import { useAppStore } from '@/stores/appStore';
 
 interface ConversationItemProps {
   item: ConversationItemType;
-  accentColor: string;
   tabType: string;
+  accentColor?: string;
 }
 
 export const ConversationItem: React.FC<ConversationItemProps> = ({
   item,
-  accentColor,
   tabType,
+  accentColor = Colors.primary,
 }) => {
   const router = useRouter();
   const { isDark, setActiveConversation } = useAppStore();
+  const theme = isDark ? Colors.dark : Colors.light;
+  
+  // Use Green for Chat tab (standard messaging), otherwise use the accent color
+  const activeColor = tabType === 'chat' ? Colors.success : accentColor;
   
   const handlePress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setActiveConversation(tabType as any, item.id);
     router.push(`/chat/${item.id}`);
   };
 
+  // Request Layout (Masterpiece Glass Card)
   if (item.type === 'request') {
     return (
-      <View style={[styles.requestContainer, isDark && styles.requestContainerDark]}>
-        <View style={styles.requestContent}>
-          <Avatar source={item.avatar} size={56} />
-          <View style={styles.requestInfo}>
-            <Text style={[styles.requestName, isDark && styles.textDark]}>
-              {item.name}
-            </Text>
-            <View style={styles.requestBadge}>
-              <View style={[styles.requestDot, { backgroundColor: accentColor }]} />
-              <Text style={[styles.requestLabel, { color: accentColor }]}>
-                New Connection
+      <View style={[
+        styles.requestCard, 
+        { 
+          shadowColor: accentColor,
+          backgroundColor: 'transparent', // Let BlurView handle bg
+        }
+      ]}>
+        <BlurView 
+          intensity={Platform.OS === 'ios' ? 60 : 100} 
+          tint={isDark ? 'dark' : 'light'}
+          style={styles.blurContent}
+        >
+          <View style={styles.requestTop}>
+            <Avatar source={item.avatar} size={64} style={{ borderRadius: 20 }} />
+            <View style={styles.requestContent}>
+              <View style={styles.requestHeaderRow}>
+                 <Text style={[styles.reqName, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
+                 <View style={[styles.newBadge, { backgroundColor: accentColor }]}>
+                   <Text style={styles.newBadgeText}>NEW</Text>
+                 </View>
+              </View>
+              <Text style={[styles.reqRole, { color: theme.sub }]}>Product Designer @ Stripe</Text>
+              <Text style={[styles.reqMutual, { color: theme.sub }]}>
+                <Ionicons name="people" size={12} /> 12 mutual connections
               </Text>
             </View>
           </View>
-        </View>
-        <View style={styles.requestActions}>
-          <TouchableOpacity
-            style={[styles.acceptButton, { backgroundColor: accentColor }]}
-            onPress={() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="checkmark" size={18} color="white" />
-            <Text style={styles.acceptText}>Accept</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.declineButton, isDark && styles.declineButtonDark]}
-            onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="close" size={18} color={isDark ? Colors.dark.sub : Colors.light.sub} />
-          </TouchableOpacity>
-        </View>
+          
+          <View style={styles.requestActions}>
+            <Button 
+              title="Confirm" 
+              onPress={() => {}} 
+              color={accentColor}
+              style={{ flex: 1, borderRadius: 16 }}
+              textStyle={{ fontSize: 15 }}
+            />
+            <Button 
+              title="Delete" 
+              variant="secondary"
+              color={theme.sub}
+              onPress={() => {}} 
+              style={{ flex: 1, borderRadius: 16, borderColor: theme.border }}
+              textStyle={{ fontSize: 15 }}
+            />
+          </View>
+        </BlurView>
       </View>
     );
   }
 
   return (
     <TouchableOpacity
-      style={[
-        styles.container,
-        item.active && [styles.activeContainer, { backgroundColor: `${accentColor}08` }],
-        isDark && !item.active && styles.containerDark,
-      ]}
+      style={styles.container}
       onPress={handlePress}
       activeOpacity={0.7}
     >
       <View style={styles.avatarContainer}>
         {item.type === 'note' ? (
-          <Avatar
-            source=""
-            size={56}
-            isNote
-            noteIcon={<Ionicons name="document-text" size={28} color={accentColor} />}
-          />
+          <View style={[styles.noteIcon, { backgroundColor: isDark ? '#262626' : '#F0F0F0' }]}>
+            <Ionicons name="document-text" size={24} color={accentColor} />
+          </View>
         ) : (
-          <Avatar source={item.avatar} size={56} showStatus statusColor={Colors.green.default} />
+          <Avatar 
+            source={item.avatar} 
+            size={52} 
+            style={tabType === 'groups' ? { borderRadius: 14 } : undefined} 
+          />
         )}
       </View>
       
       <View style={styles.content}>
-        <View style={styles.topRow}>
-          <Text
-            style={[styles.name, isDark && styles.textDark]}
-            numberOfLines={1}
-          >
+        <View style={styles.row}>
+          <Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>
             {item.name}
           </Text>
-          <Text style={[styles.time, { color: accentColor }]}>{item.time}</Text>
-        </View>
-        
-        {item.lastMessage && (
-          <Text
-            style={[styles.lastMessage, isDark && styles.subtextDark]}
-            numberOfLines={2}
-          >
-            {item.lastMessage}
-          </Text>
-        )}
-        
-        {item.type === 'note' && (
-          <View style={styles.noteIndicator}>
-            <Ionicons name="create-outline" size={14} color={isDark ? Colors.dark.sub : Colors.light.sub} />
-            <Text style={[styles.noteLabel, isDark && styles.subtextDark]}>
-              Tap to edit
+          {item.time && (
+            <Text style={[
+              styles.time, 
+              { color: item.unread && item.unread > 0 ? activeColor : theme.sub }
+            ]}>
+              {item.time}
             </Text>
-          </View>
-        )}
-      </View>
-      
-      {item.unread && item.unread > 0 && (
-        <View style={[styles.unreadBadge, { backgroundColor: accentColor }]}>
-          <Text style={styles.unreadText}>{item.unread > 99 ? '99+' : item.unread}</Text>
+          )}
         </View>
-      )}
+        
+        <View style={styles.row}>
+          <Text 
+            style={[
+              styles.preview, 
+              { 
+                color: item.unread ? theme.text : theme.sub, 
+                fontWeight: item.unread ? '500' : '400',
+              }
+            ]} 
+            numberOfLines={1}
+          >
+            {item.lastMessage || 'No messages'}
+          </Text>
+          
+          <View style={styles.metaRight}>
+            
+            {item.unread && item.unread > 0 && (
+              <View style={[styles.badge, { backgroundColor: activeColor }]}>
+                <Text style={styles.badgeText}>{item.unread}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 };
@@ -136,150 +157,131 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    padding: 14,
-    borderRadius: 18,
-    marginBottom: 10,
-    backgroundColor: 'rgba(0,0,0,0.02)',
   },
-  containerDark: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
+  requestCard: {
+    marginHorizontal: 20,
+    marginVertical: 12,
+    borderRadius: 24,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2, // Increased for glass depth
+    shadowRadius: 16,
+    elevation: 8,
+    overflow: 'hidden', // Essential for BlurView
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)', // Glass edge
   },
-  activeContainer: {
-    borderWidth: 1.5,
-    borderColor: 'rgba(0,0,0,0.08)',
+  blurContent: {
+    padding: 20,
+  },
+  requestTop: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    gap: 16,
+  },
+  requestContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  requestHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  reqName: {
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  newBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  newBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: 'white',
+    letterSpacing: 0.5,
+  },
+  reqRole: {
+    fontSize: 14,
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  reqMutual: {
+    fontSize: 12,
+    opacity: 0.7,
+  },
+  requestActions: {
+    flexDirection: 'row',
+    gap: 12,
   },
   avatarContainer: {
     marginRight: 14,
   },
+  noteIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   content: {
     flex: 1,
     justifyContent: 'center',
+    gap: 2,
   },
-  topRow: {
+  row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
   },
   name: {
     fontSize: 16,
-    fontWeight: '700',
-    color: Colors.light.text,
+    fontWeight: '600',
+    letterSpacing: -0.2,
     flex: 1,
-    letterSpacing: -0.3,
-  },
-  textDark: {
-    color: Colors.dark.text,
+    marginRight: 8,
   },
   time: {
     fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 8,
+    fontWeight: '400',
   },
-  lastMessage: {
+  preview: {
     fontSize: 14,
-    color: Colors.light.sub,
+    flex: 1,
+    marginRight: 16,
     lineHeight: 20,
   },
-  subtextDark: {
-    color: Colors.dark.sub,
+  sub: {
+    fontSize: 14,
+    marginTop: 2,
   },
-  noteIndicator: {
+  metaRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
-    gap: 6,
+    gap: 4,
   },
-  noteLabel: {
-    fontSize: 12,
-    color: Colors.light.sub,
-    fontWeight: '500',
-  },
-  unreadBadge: {
-    minWidth: 24,
-    height: 24,
-    borderRadius: 12,
-    paddingHorizontal: 8,
+  badge: {
+    backgroundColor: Colors.success, // Green badge
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8,
   },
-  unreadText: {
+  badgeText: {
     color: 'white',
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  
-  // Request styles
-  requestContainer: {
-    backgroundColor: 'rgba(20, 184, 166, 0.08)',
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 10,
-    borderWidth: 1.5,
-    borderColor: 'rgba(20, 184, 166, 0.2)',
-  },
-  requestContainerDark: {
-    backgroundColor: 'rgba(20, 184, 166, 0.12)',
-    borderColor: 'rgba(20, 184, 166, 0.25)',
-  },
-  requestContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  requestInfo: {
-    marginLeft: 14,
-    flex: 1,
-  },
-  requestName: {
-    fontSize: 17,
+    fontSize: 10,
     fontWeight: '700',
-    color: Colors.light.text,
-    marginBottom: 6,
   },
-  requestBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  requestDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  requestLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  requestActions: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  acceptButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 12,
-    gap: 6,
-  },
-  acceptText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: 'white',
-  },
-  declineButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.05)',
-  },
-  declineButtonDark: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+  actions: { 
+    flexDirection: 'row', 
+    gap: 12,
+    width: '100%',
   },
 });

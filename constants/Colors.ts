@@ -1,38 +1,45 @@
 import { ThemeColors } from '@/types';
 
-// Professional Palette from Insp
-export const Colors: ThemeColors = {
-  // Brand Accents with Glows
-  blue: { default: '#2563EB', glow: 'rgba(37, 99, 235, 0.5)' },
-  violet: { default: '#7C3AED', glow: 'rgba(124, 58, 237, 0.5)' },
-  teal: { default: '#0D9488', glow: 'rgba(13, 148, 136, 0.5)' },
-  amber: { default: '#F59E0B', glow: 'rgba(245, 158, 11, 0.5)' },
-  rose: { default: '#E11D48', glow: 'rgba(225, 29, 72, 0.5)' },
-  green: { default: '#10B981', glow: 'rgba(16, 185, 129, 0.5)' },
+export const Colors: ThemeColors & { gradients: { primary: string[], light: string[], dark: string[] } } = {
+  // Professional "Uber-like" Blue
+  primary: '#276EF1', 
   
-  // Light Theme (Clean & Airy)
   light: {
-    bg: '#F3F4F6',
-    card: 'rgba(255, 255, 255, 0.85)',
-    text: '#111827',
-    sub: '#6B7280',
-    border: 'rgba(229, 231, 235, 0.6)',
+    bg: '#F9F9F9',           // Light Gray for contrast with white cards
+    card: '#FFFFFF',         // Pure White Cards
+    text: '#000000',         // High contrast Black
+    sub: '#5E5E5E',          // Dark Gray for secondary text
+    border: '#E8E8E8',       
+    divider: 'transparent',
+    input: '#EEEEEE',
   },
   
-  // Dark Theme (Deep & Premium)
   dark: {
-    bg: '#000000',
-    card: 'rgba(15, 15, 15, 0.85)',
-    text: '#F9FAFB',
-    sub: '#A3A3A3',
-    border: 'rgba(255, 255, 255, 0.12)',
+    bg: '#000000',           // True Black
+    card: '#161616',         // Dark Gray Cards
+    text: '#FFFFFF',         
+    sub: '#A6A6A6',          
+    border: '#262626',       
+    divider: 'transparent',
+    input: '#262626',
   },
+
+  accent: '#276EF1',         
+  success: '#05A357',
+  warning: '#FFC043',
+  danger: '#E11900',
+  
+  gradients: {
+    primary: ['#276EF1', '#1952C4'], 
+    light: ['#F9F9F9', '#F9F9F9'],   
+    dark: ['#000000', '#000000'],    
+  }
 };
 
 export const TabColors = {
-  chat: Colors.blue.default,
-  groups: Colors.violet.default,
-  notes: Colors.rose.default,
-  requests: Colors.teal.default,
-  search: Colors.amber.default,
+  chat: Colors.primary,      // Blue
+  groups: '#8B5CF6',         // Violet
+  notes: '#F59E0B',          // Amber
+  requests: '#10B981',       // Emerald
+  profile: '#EC4899',        // Pink
 };

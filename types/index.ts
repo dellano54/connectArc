@@ -39,18 +39,19 @@ export interface TabConfig {
 }
 
 export interface ThemeColors {
-  blue: { default: string; glow: string };
-  violet: { default: string; glow: string };
-  teal: { default: string; glow: string };
-  amber: { default: string; glow: string };
-  rose: { default: string; glow: string };
-  green: { default: string; glow: string };
+  primary: string;
+  accent: string;
+  success: string;
+  warning: string;
+  danger: string;
   light: {
     bg: string;
     card: string;
     text: string;
     sub: string;
     border: string;
+    divider: string;
+    input: string;
   };
   dark: {
     bg: string;
@@ -58,5 +59,12 @@ export interface ThemeColors {
     text: string;
     sub: string;
     border: string;
+    divider: string;
+    input: string;
+  };
+  gradients?: {
+    primary: string[];
+    light: string[];
+    dark: string[];
   };
 }

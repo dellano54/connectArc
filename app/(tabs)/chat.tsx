@@ -15,6 +15,7 @@ import { useAppStore } from '@/stores/appStore';
 import { ConversationItem } from '@/components/ConversationItem';
 import { Colors, TabColors } from '@/constants/Colors';
 import { Avatar } from '@/components/ui/Avatar';
+import { LargeMonogramBackground } from '@/components/ui/LargeMonogramBackground'; // Updated import
 
 export default function ChatScreen() {
   const { isDark, contentData, setCurrentTab } = useAppStore();
@@ -30,7 +31,6 @@ export default function ChatScreen() {
         size={56} 
         showStatus 
         statusColor={Colors.success}
-        style={{ borderWidth: 2, borderColor: theme.bg }}
       />
       <Text style={[styles.activeUserName, { color: theme.text }]} numberOfLines={1}>
         {item.name.split(' ')[0]}
@@ -41,9 +41,10 @@ export default function ChatScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.bg }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+      <LargeMonogramBackground monogram="ARC" textOpacity={0.12} /> {/* Beautiful typography CA */}
       
       {/* Background Art */}
-      <View style={[styles.blob, { backgroundColor: TabColors.chat, opacity: isDark ? 0.1 : 0.05 }]} />
+      <View style={[styles.blob, { backgroundColor: TabColors.chat, opacity: isDark ? 0.25 : 0.15 }]} />
       
       <SafeAreaView style={styles.safeArea}>
         
@@ -79,11 +80,12 @@ export default function ChatScreen() {
             <View style={styles.activeSection}>
               <FlatList
                 horizontal
-                data={contentData.chat.items} // Mock active users
+                data={contentData.chat.items}
                 renderItem={renderActiveUser}
                 keyExtractor={(item) => `active-${item.id}`}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 20 }}
+                removeClippedSubviews={true}
               />
             </View>
           }
@@ -96,6 +98,9 @@ export default function ChatScreen() {
           )}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={15}
+          updateCellsBatchingPeriod={50}
         />
       </SafeAreaView>
     </View>

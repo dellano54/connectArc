@@ -14,7 +14,7 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          animation: 'slide_from_right',
+          animationEnabled: false,
           contentStyle: {
             backgroundColor: 'transparent',
           },
@@ -25,7 +25,7 @@ export default function RootLayout() {
           name="chat/[id]" 
           options={{ 
             presentation: 'card',
-            animation: 'slide_from_right',
+            animationEnabled: false,
             contentStyle: { backgroundColor: 'transparent' }
           }} 
         />

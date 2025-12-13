@@ -1,4 +1,4 @@
-export type TabType = 'chat' | 'groups' | 'notes' | 'requests' | 'search';
+export type TabType = 'chat' | 'groups' | 'notes' | 'requests' | 'search' | 'profile';
 
 export interface User {
   id: string;

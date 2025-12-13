@@ -14,6 +14,7 @@ import { useAppStore } from '@/stores/appStore';
 import { ConversationItem } from '@/components/ConversationItem';
 import { Colors, TabColors } from '@/constants/Colors';
 import { Avatar } from '@/components/ui/Avatar';
+import { LargeMonogramBackground } from '@/components/ui/LargeMonogramBackground';
 
 export default function GroupsScreen() {
   const { isDark, contentData, setCurrentTab } = useAppStore();
@@ -31,11 +32,12 @@ export default function GroupsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.bg }]}>
-      <View style={[styles.blob, { backgroundColor: TabColors.groups, opacity: isDark ? 0.15 : 0.08 }]} />
+      <LargeMonogramBackground monogram="ARC" textOpacity={0.12} />
+      <View style={[styles.blob, { backgroundColor: TabColors.groups, opacity: isDark ? 0.25 : 0.15 }]} />
       
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.text }]}>Teams</Text>
+          <Text style={[styles.title, { color: theme.text }]}>Groups</Text>
           <TouchableOpacity style={[styles.addBtn, { backgroundColor: TabColors.groups }]}>
             <Ionicons name="add" size={24} color="white" />
           </TouchableOpacity>
@@ -55,7 +57,7 @@ export default function GroupsScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 20 }}
               />
-              <Text style={[styles.sectionTitle, { color: theme.sub, paddingHorizontal: 24 }]}>ALL TEAMS</Text>
+              <Text style={[styles.sectionTitle, { color: theme.sub, paddingHorizontal: 24 }]}>ALL GROUPS</Text>
             </View>
           }
           renderItem={({ item }) => (

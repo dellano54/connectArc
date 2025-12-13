@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { useAppStore } from '@/stores/appStore';
 import { Colors } from '@/constants/Colors';
+import { LargeMonogramBackground } from '@/components/ui/LargeMonogramBackground';
 
 export default function SearchScreen() {
   const {
@@ -30,7 +31,7 @@ export default function SearchScreen() {
 
   return (
     <View style={styles.container}>
-      
+      <LargeMonogramBackground monogram="ARC" textOpacity={0.12} />
       <SafeAreaView style={styles.safeArea}>
         {/* Header */}
         <BlurView 

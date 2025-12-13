@@ -38,8 +38,8 @@ export const Colors: ThemeColors & { gradients: { primary: string[], light: stri
 
 export const TabColors = {
   chat: Colors.primary,      // Blue
-  groups: '#8B5CF6',         // Violet
-  notes: '#F59E0B',          // Amber
-  requests: '#10B981',       // Emerald
+  groups: '#800080',         // Purple
+  notes: '#FF0000',          // Red
+  requests: '#008000',       // Green
   profile: '#EC4899',        // Pink
 };

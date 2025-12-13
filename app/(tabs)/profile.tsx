@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAppStore } from '@/stores/appStore';
 import { Colors, TabColors } from '@/constants/Colors';
+import { LargeMonogramBackground } from '@/components/ui/LargeMonogramBackground';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function ProfileScreen() {
@@ -58,7 +59,8 @@ export default function ProfileScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.bg }]}>
-      <View style={[styles.blob, { backgroundColor: TabColors.profile, opacity: isDark ? 0.12 : 0.08 }]} />
+      <LargeMonogramBackground monogram="ARC" textOpacity={0.12} />
+      <View style={[styles.blob, { backgroundColor: TabColors.profile, opacity: isDark ? 0.25 : 0.15 }]} />
       
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>

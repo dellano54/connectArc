@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,371 +8,475 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   StatusBar,
+  Modal,
+  Keyboard,
+  TouchableWithoutFeedback,
+  Dimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useAppStore } from '@/stores/appStore';
 import { Avatar } from '@/components/ui/Avatar';
 import { Colors } from '@/constants/Colors';
 import { Message } from '@/types';
+import { DoodleBackground } from '@/components/ui/DoodleBackground';
+import { LargeMonogramBackground } from '@/components/ui/LargeMonogramBackground';
+
+const { width } = Dimensions.get('window');
+
+// Emojis for the custom picker
+const EMOJIS = ['😀','😃','😄','😁','😆','😅','😂','🤣','🥲','☺️','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🥸','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','😥','😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','🥱','😴','🤤','😪','😵','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕','🤑','🤠','😈','👿','👹','👺','🤡','💩','👻','💀','☠️','👽','👾','🤖','👋','👍','👎','👏','🫶','👐','🤲','🤝','🙏'];
 
 export default function ChatDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const { isDark, messages, addMessage, contentData, currentTab, currentUser } = useAppStore();
+  const { isDark, messages, addMessage, contentData, currentUser } = useAppStore();
+  const insets = useSafeAreaInsets();
+  
+  // Theme & Colors
   const theme = isDark ? Colors.dark : Colors.light;
+  const inputBg = isDark ? '#1C1C1E' : '#FFFFFF';
+  const inputBorder = isDark ? '#2C2C2E' : '#E5E5EA';
+  // Professional "Slate" Blue
+  const accentColor = isDark ? '#4A90E2' : '#007AFF'; 
   
   const [inputText, setInputText] = useState('');
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   
-  const tabData = contentData[currentTab];
-  const conversation = tabData?.items.find((item) => item.id === id);
+  const inputRef = useRef<TextInput>(null);
+  const flatListRef = useRef<FlatList>(null);
+
+  // Header Height Calculation
+  const headerHeight = 60 + insets.top;
+
+  // Find Conversation Logic
+  let conversation;
+  for (const tabKey in contentData) {
+    if (Object.prototype.hasOwnProperty.call(contentData, tabKey)) {
+      const tab = contentData[tabKey as keyof typeof contentData];
+      const found = tab.items.find((item) => item.id === id);
+      if (found) {
+        conversation = found;
+        break;
+      }
+    }
+  }
+
+  // --- ACTIONS ---
 
   const handleSend = () => {
     if (!inputText.trim()) return;
-    
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    
     const newMessage: Message = {
       id: `m${Date.now()}`,
       text: inputText.trim(),
       sender: 'me',
       senderName: currentUser.name,
-      time: new Date().toLocaleTimeString('en-US', { 
-        hour: 'numeric',
-        minute: '2-digit',
-      }),
+      time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
       read: false,
     };
-    
     addMessage(newMessage);
     setInputText('');
+    setShowEmojiPicker(false);
+  };
+
+  const toggleEmojiPicker = () => {
+    if (showEmojiPicker) {
+      inputRef.current?.focus();
+      setShowEmojiPicker(false);
+    } else {
+      Keyboard.dismiss();
+      setShowEmojiPicker(true);
+      setShowAttachMenu(false);
+    }
+  };
+
+  const handleInputFocus = () => {
+    setShowEmojiPicker(false);
+    setShowAttachMenu(false);
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    setInputText((prev) => prev + emoji);
   };
 
   const renderMessage = ({ item }: { item: Message }) => {
     const isMe = item.sender === 'me';
-    
     return (
       <View style={[styles.messageWrapper, isMe && styles.messageWrapperMe]}>
         {!isMe && (
           <View style={styles.avatarCol}>
-             <Avatar source={conversation?.avatar || ''} size={32} />
+             <Avatar source={conversation?.avatar || ''} size={28} />
           </View>
         )}
         <View style={{ flex: 1, alignItems: isMe ? 'flex-end' : 'flex-start' }}>
-          <View style={styles.messageHeader}>
-            <Text style={[styles.messageSender, { color: theme.sub }]}>
-              {item.senderName} • {item.time}
-            </Text>
-          </View>
-          <View
-            style={[
+          <View style={[
               styles.messageBubble,
               isMe 
-                ? { backgroundColor: Colors.primary, borderBottomRightRadius: 4 } 
+                ? { backgroundColor: accentColor, borderBottomRightRadius: 4 } 
                 : { backgroundColor: theme.card, borderTopLeftRadius: 4 },
-              !isMe && styles.shadow, // Add shadow to received messages
+              !isMe && styles.shadow,
             ]}
           >
-            {item.type === 'file' ? (
-              <View style={styles.fileContainer}>
-                <View style={[styles.fileIcon, isMe && styles.fileIconMe]}>
-                  <Ionicons 
-                    name="document" 
-                    size={24} 
-                    color={isMe ? 'white' : Colors.primary} 
-                  />
-                </View>
-                <Text style={[styles.fileText, { color: isMe ? 'white' : theme.text }]}>
-                  {item.text}
-                </Text>
-              </View>
-            ) : (
-              <Text style={[styles.messageText, { color: isMe ? 'white' : theme.text }]}>
-                {item.text}
-              </Text>
-            )}
+            <Text style={[styles.messageText, { color: isMe ? 'white' : theme.text }]}>
+              {item.text}
+            </Text>
+            <Text style={[styles.messageTime, { color: isMe ? 'rgba(255,255,255,0.7)' : theme.sub }]}>
+              {item.time}
+            </Text>
           </View>
-          {isMe && item.read && (
-            <View style={styles.readContainer}>
-              <Ionicons name="checkmark-done" size={14} color={Colors.primary} />
-            </View>
-          )}
         </View>
       </View>
     );
   };
 
+  const renderAttachmentItem = (icon: string, label: string, color: string, type: 'ionic' | 'material' = 'ionic') => (
+    <TouchableOpacity style={styles.attachItem} onPress={() => { setShowAttachMenu(false); }}>
+      <View style={[styles.attachIconCircle, { backgroundColor: color }]}>
+        {type === 'ionic' ? (
+          <Ionicons name={icon as any} size={26} color="white" />
+        ) : (
+          <MaterialIcons name={icon as any} size={26} color="white" />
+        )}
+      </View>
+      <Text style={[styles.attachLabel, { color: theme.sub }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={[styles.container, { backgroundColor: theme.bg }]}>
-      {/* Burned-in Watermark */}
-      <View style={styles.watermarkContainer} pointerEvents="none">
-        <Text style={[styles.watermarkText, { color: isDark ? '#1A1A1A' : '#EAEAEA' }]}>CA</Text>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
+      <LargeMonogramBackground monogram="ARC" fontFamily={Platform.OS === 'ios' ? 'System' : 'sans-serif'} textOpacity={0.03}/>
+      <DoodleBackground />
+
+      {/* HEADER */}
+      <View style={[
+        styles.header, 
+        { 
+          backgroundColor: theme.card, 
+          paddingTop: insets.top, 
+          height: headerHeight, 
+          borderBottomColor: theme.border 
+        }
+      ]}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={26} color={theme.text} />
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.headerInfo} activeOpacity={0.7}>
+            <Avatar source={conversation?.avatar || ''} size={38} />
+            <View style={{ marginLeft: 10, justifyContent: 'center' }}>
+              <Text style={[styles.headerName, { color: theme.text }]} numberOfLines={1}>
+                {conversation?.name || 'Chat'}
+              </Text>
+              <Text style={[styles.headerStatus, { color: theme.sub }]}>Online</Text>
+            </View>
+        </TouchableOpacity>
+
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.headerIconBtn}><Ionicons name="videocam-outline" size={26} color={accentColor} /></TouchableOpacity>
+          <TouchableOpacity style={styles.headerIconBtn}><Ionicons name="call-outline" size={24} color={accentColor} /></TouchableOpacity>
+        </View>
       </View>
 
-      <SafeAreaView style={styles.safeArea}>
-        {/* Professional Header */}
-        <View style={[styles.header, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.back();
-            }}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="arrow-back"
-              size={28}
-              color={theme.text}
-            />
-          </TouchableOpacity>
-          
-          <View style={styles.headerInfo}>
-             <Text style={[styles.headerName, { color: theme.text }]} numberOfLines={1}>
-                {conversation?.name || 'Chat'}
-             </Text>
-             <View style={styles.statusRow}>
-                <View style={[styles.statusDot, { backgroundColor: Colors.success }]} />
-                <Text style={[styles.statusText, { color: theme.sub }]}>Active</Text>
-             </View>
-          </View>
-          
-          <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7}>
-              <Ionicons name="call-outline" size={28} color={theme.text} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7}>
-              <Ionicons name="videocam-outline" size={28} color={theme.text} />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Messages */}
+      {/* KEYBOARD HANDLING */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+        keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
+      >
+        
         <FlatList
+          ref={flatListRef}
           data={[...messages].reverse()}
           keyExtractor={(item) => item.id}
           renderItem={renderMessage}
           contentContainerStyle={styles.messagesList}
-          showsVerticalScrollIndicator={false}
           inverted
+          showsVerticalScrollIndicator={false}
+          maxToRenderPerBatch={10}
+          updateCellsBatchingPeriod={50}
+          removeClippedSubviews={true}
+          scrollEventThrottle={16}
+          onScrollBeginDrag={() => {
+            Keyboard.dismiss();
+            setShowEmojiPicker(false);
+            setShowAttachMenu(false);
+          }}
         />
 
-        {/* Input Area */}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 110 : 30}
-          style={{ width: '100%' }}
-        >
-          <View style={[styles.inputContainer, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
-            <TouchableOpacity style={styles.attachBtn} activeOpacity={0.7}>
-              <Ionicons
-                name="add"
-                size={32}
-                color={Colors.primary}
-              />
-            </TouchableOpacity>
+        {/* INPUT AREA */}
+        <View style={[styles.inputContainer, { marginBottom: showEmojiPicker ? 0 : Math.max(insets.bottom, 10) }]}>
+          
+          {/* Main Bubble */}
+          <View style={[styles.inputBubble, { backgroundColor: inputBg, borderColor: inputBorder }]}>
             
-            <View style={[styles.inputWrapper, { backgroundColor: theme.input }]}>
-              <TextInput
-                style={[styles.input, { color: theme.text }]}
-                placeholder="Type a message..."
-                placeholderTextColor={theme.sub}
-                value={inputText}
-                onChangeText={setInputText}
-                multiline
-                maxLength={500}
-              />
+            <TouchableOpacity onPress={toggleEmojiPicker} style={styles.emojiBtn}>
+               <Ionicons 
+                 name={showEmojiPicker ? "close" : "happy-outline"} 
+                 size={26} 
+                 color={theme.sub} 
+               />
+            </TouchableOpacity>
+
+            <TextInput
+              ref={inputRef}
+              style={[styles.input, { color: theme.text, maxHeight: 120 }]}
+              placeholder="Message"
+              placeholderTextColor={theme.sub}
+              value={inputText}
+              onChangeText={setInputText}
+              multiline
+              onFocus={handleInputFocus}
+            />
+
+            <View style={styles.rightActions}>
+              <TouchableOpacity onPress={() => { Keyboard.dismiss(); setShowAttachMenu(true); }} style={styles.innerBtn}>
+                <Ionicons name="attach" size={26} color={theme.sub} style={{ transform: [{ rotate: '45deg' }] }} />
+              </TouchableOpacity>
+              
+              {!inputText && (
+                 <TouchableOpacity style={styles.innerBtn}>
+                   <Ionicons name="camera-outline" size={26} color={theme.sub} />
+                 </TouchableOpacity>
+              )}
             </View>
-            
-            <TouchableOpacity
-              style={[
-                styles.sendBtn, 
-                { backgroundColor: inputText.trim() ? Colors.primary : theme.input }
-              ]}
-              onPress={handleSend}
-              disabled={!inputText.trim()}
-              activeOpacity={0.8}
-            >
-              <Ionicons 
-                name="send" 
-                size={22} 
-                color={inputText.trim() ? 'white' : theme.sub} 
-              />
-            </TouchableOpacity>
           </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+
+          {/* Floating Action Button */}
+          <TouchableOpacity
+            style={[styles.fabBtn, { backgroundColor: accentColor }]}
+            onPress={inputText.trim() ? handleSend : undefined}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={inputText.trim() ? "send" : "mic"}
+              size={22}
+              color="white"
+              style={{ marginLeft: inputText.trim() ? 2 : 0 }}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* EMOJI PICKER */}
+        {showEmojiPicker && (
+          <View style={[styles.emojiPicker, { backgroundColor: theme.card, height: 280, paddingBottom: insets.bottom }]}>
+            <FlatList 
+              data={EMOJIS}
+              numColumns={8}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={({item}) => (
+                <TouchableOpacity onPress={() => handleEmojiSelect(item)} style={styles.emojiItem}>
+                  <Text style={{fontSize: 24}}>{item}</Text>
+                </TouchableOpacity>
+              )}
+              contentContainerStyle={{ paddingVertical: 10 }}
+              showsVerticalScrollIndicator={false}
+            />
+          </View>
+        )}
+
+      </KeyboardAvoidingView>
+
+      {/* ATTACHMENT MODAL */}
+      <Modal
+        transparent
+        visible={showAttachMenu}
+        animationType="fade"
+        onRequestClose={() => setShowAttachMenu(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowAttachMenu(false)}>
+            <View style={styles.modalOverlay}>
+                <View style={[styles.attachSheet, { backgroundColor: theme.card, paddingBottom: insets.bottom + 20 }]}>
+                    <View style={styles.attachRow}>
+                        {renderAttachmentItem('document-text', 'Document', '#7F66FF')}
+                        {renderAttachmentItem('camera', 'Camera', '#E05C8C')}
+                        {renderAttachmentItem('image', 'Gallery', '#BF5AF2')}
+                    </View>
+                    <View style={styles.attachRow}>
+                        {renderAttachmentItem('headset', 'Audio', '#FF9F0A')}
+                        {renderAttachmentItem('location', 'Location', '#30D158')}
+                        {renderAttachmentItem('person', 'Contact', '#0A84FF')}
+                    </View>
+                </View>
+            </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  watermarkContainer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: -1,
-  },
-  watermarkText: {
-    fontSize: 200,
-    fontWeight: '900',
-    opacity: 0.4,
-    transform: [{ rotate: '-20deg' }],
-  },
-  safeArea: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+  
+  // Header
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 10 : 10,
-    paddingBottom: 16,
+    alignItems: 'center', // Vertically center items
+    paddingHorizontal: 10,
     borderBottomWidth: 1,
+    zIndex: 10,
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 3,
-    zIndex: 10,
   },
-  backBtn: {
-    marginRight: 16,
-  },
-  headerInfo: {
-    flex: 1,
-  },
-  headerName: {
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: -0.3,
-  },
-  statusRow: {
-    flexDirection: 'row',
+  backBtn: { 
+    padding: 8,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 2,
-    gap: 6,
   },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  headerInfo: { 
+    flex: 1, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginLeft: 0,
+    height: '100%',
   },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '500',
+  headerName: { fontSize: 17, fontWeight: '700' },
+  headerStatus: { fontSize: 12, marginTop: 1 },
+  headerActions: { 
+    flexDirection: 'row', 
+    gap: 12, 
+    paddingRight: 6,
+    alignItems: 'center', // Vertically center action icons
   },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  iconBtn: {
-    padding: 4,
-  },
+  headerIconBtn: { padding: 6 },
+  
+  // Messages
   messagesList: {
-    padding: 20,
-    paddingBottom: 24,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
   },
   messageWrapper: {
-    marginBottom: 24,
+    marginBottom: 16,
     flexDirection: 'row',
-    width: '100%',
-    gap: 12,
+    gap: 8,
   },
-  messageWrapperMe: {
-    justifyContent: 'flex-end',
-  },
-  avatarCol: {
-    justifyContent: 'flex-end',
-    marginBottom: 4,
-  },
-  messageHeader: {
-    marginBottom: 6,
-    paddingHorizontal: 2,
-  },
-  messageSender: {
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
+  messageWrapperMe: { justifyContent: 'flex-end' },
+  avatarCol: { justifyContent: 'flex-end' },
   messageBubble: {
-    padding: 16,
-    borderRadius: 20,
-    maxWidth: '85%',
+    padding: 10,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    maxWidth: '80%',
+    minWidth: 60,
   },
   shadow: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  messageText: {
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  fileContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  fileIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  fileIconMe: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  fileText: {
-    fontSize: 15,
-    fontWeight: '500',
-    flex: 1,
-  },
-  readContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 4,
-  },
+  messageText: { fontSize: 16, lineHeight: 22 },
+  messageTime: { fontSize: 10, alignSelf: 'flex-end', marginTop: 4 },
+
+  // Input Area
   inputContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 24, // Significant padding for soft keys
-    borderTopWidth: 1,
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    alignItems: 'flex-end', // Aligns container items to bottom
+    paddingHorizontal: 8,
+    paddingTop: 6,
+    gap: 6,
   },
-  attachBtn: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  inputWrapper: {
+  inputBubble: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-end', // ALIGN ICONS TO BOTTOM OF TEXT INPUT
     borderRadius: 24,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    minHeight: 48,
-    justifyContent: 'center',
+    borderWidth: 1,
+    minHeight: 48, 
+    paddingBottom: 0, // Padding handled by children
+  },
+  emojiBtn: {
+    height: 48, // Fixed height to match single-line input
+    width: 44,
+    justifyContent: 'center', // Vertically center icon in its box
+    alignItems: 'center',
+    marginBottom: 0, // Aligned with bottom
   },
   input: {
+    flex: 1,
     fontSize: 16,
-    maxHeight: 100,
+    paddingTop: 12, // Symmetric padding
+    paddingBottom: 12, // Symmetric padding
+    paddingHorizontal: 4,
+    textAlignVertical: 'center', 
   },
-  sendBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  rightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 6,
+    height: 48, // Fixed height to match single-line input
+    marginBottom: 0, // Aligned with bottom
+  },
+  innerBtn: {
+    padding: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fabBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+
+  // Attach Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    justifyContent: 'flex-end',
+  },
+  attachSheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 24,
+    paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 10,
+  },
+  attachRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 24,
+  },
+  attachItem: { alignItems: 'center', width: 80 },
+  attachIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  attachLabel: { fontSize: 12, fontWeight: '500' },
+
+  // Emoji Picker
+  emojiPicker: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  emojiItem: {
+    width: width / 8,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

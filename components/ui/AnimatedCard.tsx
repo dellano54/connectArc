@@ -1,12 +1,5 @@
-import React, { useEffect } from 'react';
-import { ViewStyle } from 'react-native';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
-  withDelay, 
-  withSpring,
-  FadeInDown 
-} from 'react-native-reanimated';
+import React from 'react';
+import { View, ViewStyle } from 'react-native';
 
 interface AnimatedCardProps {
   children: React.ReactNode;
@@ -14,14 +7,10 @@ interface AnimatedCardProps {
   style?: ViewStyle | ViewStyle[];
 }
 
-export const AnimatedCard: React.FC<AnimatedCardProps> = ({ children, index, style }) => {
-  // Using Layout Animation preset for entrance
+export const AnimatedCard: React.FC<AnimatedCardProps> = ({ children, style }) => {
   return (
-    <Animated.View
-      entering={FadeInDown.delay(index * 100).springify().damping(12)}
-      style={style}
-    >
+    <View style={style}>
       {children}
-    </Animated.View>
+    </View>
   );
 };

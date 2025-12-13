@@ -15,6 +15,7 @@ import { useAppStore } from '@/stores/appStore';
 import { ConversationItem } from '@/components/ConversationItem';
 import { Colors, TabColors } from '@/constants/Colors';
 import { Avatar } from '@/components/ui/Avatar';
+import { LargeMonogramBackground } from '@/components/ui/LargeMonogramBackground';
 
 const { width } = Dimensions.get('window');
 
@@ -47,7 +48,9 @@ export default function RequestsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.bg }]}>
+      <LargeMonogramBackground monogram="ARC" textOpacity={0.12} />
       {/* Background Art - Digital Blobs */}
+      <View style={[styles.blob, { backgroundColor: TabColors.requests, opacity: isDark ? 0.25 : 0.15 }]} />
       <View 
         style={[
           styles.blob, 
@@ -104,11 +107,11 @@ export default function RequestsScreen() {
                 keyExtractor={(item) => item.id}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.suggestionsList}
-                style={{ marginBottom: 24 }}
+                // Removed style={{ marginBottom: 24 }} from here
               />
 
               {/* Pending Section Header */}
-              <View style={styles.sectionHeaderRow}>
+              <View style={[styles.sectionHeaderRow, { marginTop: 20 }]}>
                 <Text style={[styles.sectionTitle, { color: theme.sub }]}>PENDING ({contentData.requests.items.length})</Text>
               </View>
             </View>
@@ -191,6 +194,7 @@ const styles = StyleSheet.create({
   },
   suggestionsList: {
     paddingHorizontal: 16,
+    paddingBottom: 24, // Added padding to separate from next section
   },
   suggestionCard: {
     width: 160,

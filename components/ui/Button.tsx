@@ -59,6 +59,8 @@ export const Button: React.FC<ButtonProps> = ({
   );
 
   if (isPrimary && !disabled) {
+    const gradientColors = (Colors.gradients?.primary ?? [color, color]) as [string, string, ...string[]];
+
     return (
       <TouchableOpacity
         onPress={onPress}
@@ -67,7 +69,7 @@ export const Button: React.FC<ButtonProps> = ({
         style={[styles.container, style]}
       >
         <LinearGradient
-          colors={Colors.gradients?.primary || [color, color]}
+          colors={gradientColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={[styles.button, GlobalStyles.shadowMd]}

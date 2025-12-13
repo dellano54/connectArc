@@ -23,11 +23,11 @@ export const Avatar: React.FC<AvatarProps> = ({
   noteIcon,
 }) => {
   const isDark = useAppStore((state) => state.isDark);
-  const borderRadius = size * 0.28; // Slightly more rounded
+  const borderRadius = size / 2; // Full circle by default
   const borderColor = isDark ? Colors.dark.bg : Colors.light.bg;
 
   return (
-    <View style={[{ width: size, height: size }, style]}>
+    <View style={[{ width: size, height: size, borderRadius, overflow: 'hidden' }, style]}>
       {isNote ? (
         <View
           style={[
@@ -66,6 +66,9 @@ export const Avatar: React.FC<AvatarProps> = ({
               backgroundColor: statusColor,
               borderWidth: size > 48 ? 3 : 2.5,
               borderColor: borderColor,
+              right: Math.max(4, size * 0.06),
+              bottom: Math.max(4, size * 0.06),
+              zIndex: 10,
             },
           ]}
         />

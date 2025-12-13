@@ -1,12 +1,14 @@
 import { Tabs } from 'expo-router';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppStore } from '@/stores/appStore';
 import { Colors, TabColors } from '@/constants/Colors';
 import { BlurView } from 'expo-blur';
 
 export default function TabLayout() {
   const { isDark } = useAppStore();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -20,13 +22,13 @@ export default function TabLayout() {
           borderTopColor: isDark ? '#262626' : '#F0F0F0',
           height: Platform.OS === 'ios' ? 100 : 84,
           paddingTop: 18,
-          paddingBottom: Platform.OS === 'ios' ? 24 : 10,
+          paddingBottom: Platform.OS === 'ios' ? 20 : Math.max(10, insets.bottom),
           backgroundColor: isDark ? '#000000' : '#FFFFFF',
         },
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: '600',
-          marginTop: 4,
+          marginTop: 8,
           fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
         },
       }}
@@ -44,10 +46,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="groups"
         options={{
-          title: 'Teams',
+          title: 'Groups',
           tabBarActiveTintColor: TabColors.groups,
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "people" : "people-outline"} size={30} color={color} />
+            <Ionicons name={focused ? "people" : "people-outline"} size={28} color={color} />
           ),
         }}
       />

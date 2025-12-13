@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAppStore } from '@/stores/appStore';
 import { Colors, TabColors } from '@/constants/Colors';
+import { LargeMonogramBackground } from '@/components/ui/LargeMonogramBackground';
 
 export default function NotesScreen() {
   const { isDark, contentData, setCurrentTab, createNote, isNoteModalVisible, setNoteModalVisible } = useAppStore();
@@ -44,7 +45,8 @@ export default function NotesScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.bg }]}>
-      <View style={[styles.blob, { backgroundColor: TabColors.notes, opacity: isDark ? 0.12 : 0.08 }]} />
+      <LargeMonogramBackground monogram="ARC" textOpacity={0.12} />
+      <View style={[styles.blob, { backgroundColor: TabColors.notes, opacity: isDark ? 0.25 : 0.15 }]} />
       
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
